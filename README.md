@@ -37,6 +37,15 @@ Prebuilt releases and package-manager distribution may be added in the future.
 
 ## Build
 
+First clone the repository:
+
+```bash
+git clone https://github.com/MHamzaAamir/git-extended.git
+cd git-extended
+```
+
+Then configure and build:
+
 ```bash
 cmake -S . -B build
 cmake --build build
