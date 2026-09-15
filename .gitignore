@@ -1,0 +1,25 @@
+# Build output
+/build/
+build/
+cmake-build-*/
+
+# CMake artifacts (in case of in-source builds)
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+Testing/
+Makefile
+
+# Object / library / binary artifacts
+*.o
+*.a
+*.dylib
+*.so
+*.out
+
+# Editor / OS noise
+.DS_Store
+.idea/
+.vscode/
+*.swp
