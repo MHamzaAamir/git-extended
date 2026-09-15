@@ -8,15 +8,14 @@
 namespace commands {
 
 int open(const Args& args) {
-    if (args.size() > 1) {
-        std::cerr << "git open: usage: git open [remote]\n";
+    if (!args.empty()) {
+        std::cerr << "git open: usage: git open\n";
         return 2;
     }
-    const std::string remote = args.empty() ? "origin" : args.front();
 
-    const auto url = git::remote_url(remote);
+    const auto url = git::remote_url();
     if (!url) {
-        std::cerr << "git open: remote '" << remote << "' not found (see 'git remote -v')\n";
+        std::cerr << "git open: remote 'origin' not found (see 'git remote -v')\n";
         return 1;
     }
 
