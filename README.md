@@ -1,4 +1,4 @@
-# git-extended
+# Git-extended
 
 A small, extensible C++17 CLI that adds quality-of-life subcommands to Git.
 
@@ -26,6 +26,15 @@ make that straightforward.
 
 No third-party libraries.
 
+## Distribution
+
+There are currently **no prebuilt binaries and no package-manager packages**
+(no Homebrew formula, MacPorts port, and so on). The only supported way to get
+`git-extended` (assuming you really want it) is to [build it from source](#build) with CMake, which
+takes only a few seconds and has no third-party dependencies.
+
+Prebuilt releases and package-manager distribution may be added in the future.
+
 ## Build
 
 ```bash
@@ -33,41 +42,117 @@ cmake -S . -B build
 cmake --build build
 ```
 
-This produces `build/git-extended`.
+All generated files go in `build/`, including the executable at
+`build/git-extended`.
 
 ## Install
 
+Installing copies the `git-extended` binary and the `git-<command>` symlinks
+into a `bin` directory. CMake picks that directory from an install **prefix**:
+`<prefix>/bin`. There are two common choices.
+
+### Global install (system-wide)
+
+Uses the default prefix `/usr/local`, so everything goes to `/usr/local/bin`:
+
 ```bash
-cmake --install build
+sudo cmake --install build
 ```
 
-By default the prefix is `/usr/local`, so the binary and symlinks land in
-`/usr/local/bin`. To choose another prefix:
+`/usr/local` is owned by `root`, so this typically needs `sudo`. The result is available
+to every user account on the machine.
+
+### Local install (per-user)
+
+Uses a prefix inside your home directory, so everything goes to
+`~/.local/bin`:
+
 ```bash
 cmake --install build --prefix "$HOME/.local"
 ```
 
-Make sure the bin directory is on your `PATH`, e.g. for the default prefix:
+No `sudo` is needed, nothing outside your home directory is touched, and only
+your account sees the commands. This is the recommended option for personal
+use.
+
+You can install to any other prefix with the same flag, e.g.
+`--prefix "$HOME/tools"` puts things in `~/tools/bin`.
+
+### Why you may need to update `PATH`
+
+Installing the files is not enough for the shell to run them by name. `PATH` is
+the list of directories your shell searches when you type a command. You can
+print it with:
 
 ```bash
-export PATH="/usr/local/bin:$PATH"
+echo "$PATH"
 ```
 
-The install step places `git-extended` in the prefix's `bin` directory and
-creates three symlinks next to it:
+If the install's `bin` directory is not in that list, running `git-extended`
+(or `git open`) fails with `command not found`. Concretely:
+
+- `/usr/local/bin` is already on `PATH` on macOS, so a **global install works
+  immediately**.
+- `~/.local/bin` is usually **not** on `PATH` by default, so a **local install
+  needs one extra step**. Add it to your shell config — `~/.zshrc` on macOS
+  (zsh) or `~/.bashrc` for bash — so it takes effect in every new terminal:
+
+  ```bash
+  export PATH="$HOME/.local/bin:$PATH"
+  ```
+
+  Then reload it with `source ~/.zshrc` (or just open a new terminal).
+
+  Prepending (`"$HOME/.local/bin:$PATH"`) puts your local install *ahead of* any
+  system-wide copies. To confirm which copy your shell will run:
+
+  ```bash
+  which git-extended
+  ```
+
+### What gets installed
+
+Either way, the prefix's `bin` directory ends up with the binary plus three
+symlinks, which is what lets `git open`, `git back`, and `git copy` work:
 
 ```
-git-open -> git-extended
-git-back -> git-extended
-git-copy -> git-extended
+git-extended
+git-open  -> git-extended
+git-back  -> git-extended
+git-copy  -> git-extended
 ```
 
-Verify the install:
+Verify:
 
 ```bash
-git-extended --version   # git-extended 1.0.0
-ls -l /usr/local/bin/git-*   # or your custom prefix's bin directory
+git-extended --version
 ```
+
+Only reach for `sudo` when you actually want a system-wide install; building and
+installing as your own user avoids permission surprises.
+
+## Uninstall
+
+Remove the files from the `bin` directory of the prefix you installed to —
+`/usr/local/bin` for a global install, `~/.local/bin` for a local one:
+
+```bash
+# global
+sudo rm -f /usr/local/bin/git-extended \
+           /usr/local/bin/git-open \
+           /usr/local/bin/git-back \
+           /usr/local/bin/git-copy
+```
+
+```bash
+# local
+rm -f "$HOME/.local/bin/git-extended" \
+      "$HOME/.local/bin/git-open" \
+      "$HOME/.local/bin/git-back" \
+      "$HOME/.local/bin/git-copy"
+```
+
+You can then delete the `build/` directory.
 
 ## Usage
 
@@ -96,12 +181,10 @@ exactly.
 
 ### `git open`
 
-Opens the current repository's remote in the default browser. It defaults to the
-`origin` remote; pass another remote name to override.
+Opens the current repository's `origin` remote in the default browser.
 
 ```bash
-git open            # opens origin
-git open upstream   # opens the "upstream" remote
+git open   # opens the URL configured for the origin remote
 ```
 
 Common GitHub/GitLab-style remote URLs are normalized before opening:
@@ -113,46 +196,8 @@ Common GitHub/GitLab-style remote URLs are normalized before opening:
 | `ssh://git@gitlab.com/group/sub/repo.git`| `https://gitlab.com/group/sub/repo`      |
 | `git://github.com/user/repo.git`         | `https://github.com/user/repo`           |
 
-## Project layout
 
-```
-src/
-  main.cpp              # argv[0] dispatch + top-level help/version
-  commands/
-    commands.h          # command registry + declarations
-    commands.cpp        # registry, lookup, usage text
-    open.cpp            # git open
-    back.cpp            # git back
-    copy.cpp            # git copy
-  git/
-    git.h
-    git.cpp             # thin wrappers over the git CLI + URL normalization
-  platform/
-    process.h
-    process.cpp         # fork/exec capture + inherit (no system())
-    clipboard.h
-    clipboard.cpp       # pbcopy on macOS
-```
+## Note
 
-## Adding another `git-<command>`
-
-1. Add a handler `int mycommand(const commands::Args& args);` in a new
-   `src/commands/mycommand.cpp`. Return an exit code; print errors to `stderr`.
-   Declare it in `src/commands/commands.h`.
-2. Register it in `commands::registry()` in `src/commands/commands.cpp`:
-
-   ```cpp
-   {"mycommand", "short description shown in help", mycommand},
-   ```
-
-3. Add `src/commands/mycommand.cpp` to the `git_extended_core` sources in
-   `CMakeLists.txt`, and add `mycommand` to the `IN ITEMS` list in the symlink
-   `foreach` loop.
-4. Rebuild and install:
-
-   ```bash
-   cmake --build build && cmake --install build
-   ```
-
-Nothing in `main.cpp` needs to change — dispatch is entirely driven by the
-registry and `argv[0]`.
+This is a personal project that grows organically. I add new subcommands as they
+become useful to me or as I hit a need for them.
