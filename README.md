@@ -121,14 +121,16 @@ If the install's `bin` directory is not in that list, running `git-extended`
 
 ### What gets installed
 
-Either way, the prefix's `bin` directory ends up with the binary plus three
-symlinks, which is what lets `git open`, `git back`, and `git copy` work:
+Either way, the prefix's `bin` directory ends up with the binary plus four
+symlinks, which is what lets `git open`, `git back`, `git copy`, and
+`git pcopy` work:
 
 ```
 git-extended
-git-open  -> git-extended
-git-back  -> git-extended
-git-copy  -> git-extended
+git-open   -> git-extended
+git-back   -> git-extended
+git-copy   -> git-extended
+git-pcopy  -> git-extended
 ```
 
 Verify:
@@ -150,7 +152,8 @@ Remove the files from the `bin` directory of the prefix you installed to —
 sudo rm -f /usr/local/bin/git-extended \
            /usr/local/bin/git-open \
            /usr/local/bin/git-back \
-           /usr/local/bin/git-copy
+           /usr/local/bin/git-copy \
+           /usr/local/bin/git-pcopy
 ```
 
 ```bash
@@ -158,7 +161,8 @@ sudo rm -f /usr/local/bin/git-extended \
 rm -f "$HOME/.local/bin/git-extended" \
       "$HOME/.local/bin/git-open" \
       "$HOME/.local/bin/git-back" \
-      "$HOME/.local/bin/git-copy"
+      "$HOME/.local/bin/git-copy" \
+      "$HOME/.local/bin/git-pcopy"
 ```
 
 You can then delete the `build/` directory.
@@ -176,6 +180,30 @@ copied: feature/CU-1832-Header-fix-unit-type-sticky
 
 If `HEAD` is detached, or you are not inside a repository, it prints an error
 and exits non-zero instead of copying anything misleading.
+
+### `git pcopy`
+
+`pcopy` stands for **partial copy**. It copies the current branch name with its
+first `/`-separated segment removed. Handy when branches are prefixed by a type
+or ticket, e.g. `feat/random-branch-name` → `random-branch-name`.
+
+```bash
+$ git pcopy
+copied: random-branch-name
+```
+
+Only the **first** slash is used as the split point, so any later slashes stay
+intact:
+
+| Branch                    | Copied               |
+| ------------------------- | -------------------- |
+| `feat/random-branch-name` | `random-branch-name` |
+| `feat/a/b`                | `a/b`                |
+| `feature/CU-1832/fix`     | `CU-1832/fix`        |
+| `main` (no slash)         | `main`               |
+
+Like `git copy`, it reports an error on a detached `HEAD` or outside a
+repository.
 
 ### `git back`
 
