@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 project(git-extended
-    VERSION 1.0.0
+    VERSION 1.1.0
     DESCRIPTION "Quality-of-life commands for git"
     LANGUAGES CXX)
 
@@ -23,6 +23,7 @@ add_library(git_extended_core STATIC
     src/commands/open.cpp
     src/commands/back.cpp
     src/commands/copy.cpp
+    src/commands/pcopy.cpp
     src/git/git.cpp
     src/platform/process.cpp
     src/platform/clipboard.cpp)
@@ -39,7 +40,7 @@ install(TARGETS git-extended RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 # Git finds external subcommands as `git-<name>` executables on PATH, so install
 # one symlink per command alongside the binary.
-foreach(cmd IN ITEMS open back copy)
+foreach(cmd IN ITEMS open back copy pcopy)
     install(CODE "
         set(_link \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/git-${cmd}\")
         file(REMOVE \"\${_link}\")
