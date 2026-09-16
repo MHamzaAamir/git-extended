@@ -11,7 +11,6 @@ using Args = std::vector<std::string>;
 int open(const Args& args);
 int back(const Args& args);
 int copy(const Args& args);
-int pcopy(const Args& args);
 
 struct Entry {
     const char* name;

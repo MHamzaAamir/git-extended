@@ -11,8 +11,7 @@ const std::vector<Entry>& registry() {
     static const std::vector<Entry> entries = {
         {"open", "open the repository's remote URL in the browser", open},
         {"back", "switch back to the previous branch (git switch -)", back},
-        {"copy", "copy the current branch name to the clipboard", copy},
-        {"pcopy", "partial copy: branch name without its first '/'-segment", pcopy},
+        {"copy", "copy the current branch name to the clipboard (-p for partial)", copy},
     };
     return entries;
 }
@@ -34,7 +33,7 @@ void print_usage() {
     for (const auto& entry : registry()) {
         std::cout << "  " << entry.name << "\t" << entry.summary << "\n";
     }
-    std::cout << "\ninstalled as symlinks: git-open, git-back, git-copy, git-pcopy\n";
+    std::cout << "\ninstalled as symlinks: git-open, git-back, git-copy\n";
 }
 
 std::optional<std::string> current_branch_or_report(const std::string& command) {
